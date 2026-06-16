@@ -62,10 +62,26 @@ There are two kinds of abstractions to classify each concept into:
 **Modularity Abstraction `[M]`**
 : All about encapsulation, drawing boundaries, and hiding internals — ADT, API, layered design. The abstraction relies on an *interface* to shield internal implementation from callers. Callers see only the contract; the mechanism behind it is irrelevant.
 : *Signal*: the concept has a public interface / header / API surface that callers depend on, while the implementation can vary.
+: *Classic examples*:
+  - **TCP** — hides IP routing, retransmission, and packet reordering; exposes a reliable byte stream
+  - **String library** — hides character arrays and memory management; exposes text operations
+  - **File system** — hides spinning disks, block layout, and wear leveling; exposes named files with read/write
+  - **Virtual memory / flat address space** — hides MMU, page tables, and TLB; exposes a contiguous address space
+  - **SQL** — hides query plans, indexes, and storage layout; exposes declarative data retrieval
+  - **NFS / SMB** — hides the network; exposes remote files as if local
+  - **C++ `std::string`** — hides `char*` buffer management; exposes a safe, value-typed string
 
 **Modeling Abstraction `[Mo]`**
 : Used when constructing a mental model through thinking and reasoning. The goal is the **minimal, most elegant description** that preserves the one property you care about — cutting away everything orthogonal to that essence.
-: *Signal*: the concept is a conceptual entity (a domain noun, a state machine, a protocol step) with no physical boundary; its value is precision of thought, not encapsulation of code.
+: *Signal*: the concept is a conceptual entity (a domain noun, a consistency model, a protocol invariant) with no physical boundary; its value is precision of thought, not encapsulation of code.
+: *Classic examples*:
+  - **Lamport logical clocks** — throw away wall-clock time; keep only *happens-before*
+  - **Hybrid logical clocks** — keep wall-clock and causality; throw away the rest
+  - **TrueTime** — model time as a bounded-uncertainty interval, not a point
+  - **Consensus (Paxos)** — agree on a single decision; Lamport's derivation from Consensus → Voting → final protocol is a masterclass: each step throws away one more irrelevant dimension
+  - **Linearizability (and all consistency models)** — throw away replication, caching, and retries; keep only the illusion of a single-copy sequential history
+  - **Log as the database** — throw away materialized state as source of truth; keep only the ordered, append-only sequence of events; everything else is a projection
+  - **MapReduce / Spark** — throw away orchestration, parallelism, scheduling, and fault tolerance; keep a DAG of deterministic transforms over partitioned data — the framework reconstructs the rest from that skeleton
 
 #### Analysis Steps
 
