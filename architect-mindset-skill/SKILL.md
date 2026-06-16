@@ -19,7 +19,35 @@ Analyze the codebase to extract its core architecture and concept models, identi
 
 ### 1. Architecture Analysis
 
-Identify the macro-level structure: major subsystems, execution boundaries (User/Kernel, Client/Server), data flow directions, and cross-cutting communication mechanisms (IPC, RPC, message queues).
+An architecture diagram is a visual representation of **Components** and **Relations**:
+- **Component**: A named, bounded unit with a clear responsibility — subsystem, module, service, library, process, or layer.
+- **Relation**: A directed interaction between two components — dependency, data flow, control flow, or protocol.
+
+#### Component Identification Methods
+
+Apply these methods in order; each surfaces different kinds of components:
+
+1. **Directory Boundary** — Top-level directories and immediate subdirectories map to modules or subsystems. A directory that owns its own `include/`, `src/`, or build descriptor (`CMakeLists.txt`, `Android.bp`) is almost always a component.
+
+2. **Build Target** — Each independently compiled unit is a component: a CMake `add_library`/`add_executable`, a Cargo crate, a Gradle module, a Go package, a Maven artifact. Scan `CMakeLists.txt`, `Cargo.toml` workspace members, `Android.bp` modules.
+
+3. **Public API Surface** — Any unit that publishes an interface boundary is a component: a C/C++ `include/` header directory, an AIDL/HAL/`.proto` file, an OpenAPI spec, a REST controller. The interface is the component's contract; treat it as the component's visible face.
+
+4. **Process / Thread Boundary** — Separate OS processes, sandboxed processes (Android UID isolation), or dedicated thread pools are components. Their communication points (IPC, socket, pipe, message queue) become Relations.
+
+5. **Deployment Unit** — Anything deployed or loaded independently: a `.so`/`.dll` plugin, a kernel module (`*.ko`), a container image, a microservice. Each deployable artifact is a component.
+
+6. **Conceptual Cohesion (Noun Cluster)** — Files that share the same ubiquitous-language noun (e.g., all files named `*scheduler*`, `*memory*`, `*session*`) belong to one conceptual component even if scattered across directories.
+
+#### Relation Identification
+
+Once components are identified, extract relations by looking for:
+- **Dependency**: `#include`, `import`, `use`, `require` — A references B's type or function.
+- **Data Flow**: A writes data that B reads — shared memory, pipes, files, message queues.
+- **Control Flow**: A calls B's function / RPC — synchronous invocation.
+- **Protocol**: A and B communicate via a named protocol — Binder, gRPC, REST, MQTT, D-Bus. Use the protocol name as the edge label.
+
+Finally, identify macro-level execution boundaries — User/Kernel, Client/Server, App/Framework/HAL/Driver — and use them as the diagram's outermost grouping layers.
 
 ### 2. Conceptual Model Extraction (The Soul of the Design)
 Do not treat code as just logic; treat names as abstract ideas. Actively scan **Filenames, Class names, Struct definitions, and Core Data Structures** to reverse-engineer the domain's conceptual model:
@@ -57,7 +85,8 @@ Provide a clear, scannable, and highly structured report containing exactly thes
 
 1. **The Architecture Diagram (High-Level Overview):**
    * Generate a comprehensive **ASCII Diagram** representing the overall bird's-eye view of the project.
-   * Map out macro-subsystems, execution spaces (e.g., User/Kernel, Client/Server), and data flow directions.
+   * The diagram must express **Components** (boxes with names and responsibilities) and **Relations** (labeled arrows showing dependency, data flow, control flow, or protocol) — derived from the 6 identification methods above.
+   * Group components by execution boundary (e.g., User/Kernel, Client/Server, App/Framework/HAL/Driver) as the outermost layers.
 
 2. **The Conceptual Model Diagram (The Mind Map):**
    * Generate some **Visual ASCII Diagram** dedicated purely to the domain concepts.
