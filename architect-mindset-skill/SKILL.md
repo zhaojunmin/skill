@@ -1,6 +1,6 @@
 ---
 name: architect-mindset
-description: Analyze a codebase from a principal architect's perspective to reverse-engineer its architecture, conceptual model, design patterns, structural blueprints, runtime behaviors, and invariants. Produces a structured 7-section report with ASCII diagrams, Mermaid diagrams, concept vocabulary, and invariant guardrails.
+description: Analyze a codebase from a principal architect's perspective to reverse-engineer its architecture, conceptual model, design patterns, structural blueprints, runtime behaviors, and invariants. Produces a structured 7-section report with ASCII diagrams, HTML interactive diagrams, Excalidraw diagrams, concept vocabulary, and invariant guardrails.
 ---
 
 # Architect Mindset
@@ -93,7 +93,8 @@ Provide a clear, scannable, and highly structured report containing exactly thes
    * Show The concept what abstract. This serves as the direct map of the system's "Mental Model."
 
 3. **The Structural Blueprint Diagram (Static Block View):**
-   * Generate a **Mermaid.js Component Diagram** that maps out how the architectural blocks (IPC, Concurrency, Memory, Storage, etc.) map to physical directories, filenames, or target modules.
+   * Invoke the `architecture-diagram` skill to produce a **self-contained HTML interactive diagram** that maps how the architectural blocks (IPC, Concurrency, Memory, Storage, etc.) relate to physical directories, filenames, or target modules.
+   * The HTML diagram must use a dark theme, render components as labeled boxes grouped by layer, and draw labeled arrows for each relation type (dependency / data flow / control flow / protocol).
 
 4. **The Concept Vocabulary & Mapping:**
    * Provide a glossary of the 5-10 most critical concepts discovered.
@@ -104,7 +105,20 @@ Provide a clear, scannable, and highly structured report containing exactly thes
    * For each pattern, specify: **[Pattern Name] -> Concrete Implementation (Specific Classes/Files) -> Purpose in this Architecture.**
 
 6. **The Dynamic Interaction Diagram (Behavioral View):**
-   * Generate a **Mermaid.js Sequence Diagram** tracing a critical runtime path, clearly annotating *where* core data structures are mutated, *which* design patterns are in action, and *when* Invariants are enforced.
+   * Generate an **ASCII Sequence Diagram** tracing a critical runtime path. Use the format below. Annotate *where* core data structures are mutated, *which* design patterns are in action, and *when* invariants are enforced.
+
+   ```
+   Caller          ComponentA         ComponentB         Store
+     |                 |                  |                |
+     |-- request() --> |                  |                |
+     |                 |-- query() -----> |                |
+     |                 |                  |-- read() ----> |
+     |                 |                  | <-- data ----- |
+     |                 | <-- result ----- |                |
+     | <-- response -- |                  |                |
+   ```
+
+   * For complex async flows (queues, callbacks, threads), use `excalidraw-diagram` skill instead to produce an Excalidraw file that can represent parallel lanes and async boundaries clearly.
 
 7. **The Invariant Guardrails:**
    * A section listing the top 3-5 critical Invariants (Structural, State, or Contextual), referencing specific functions, validations, or guards in the code.
