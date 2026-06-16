@@ -9,6 +9,22 @@ You are an expert Software Archaeologist, Principal Architect, and Visual Thinke
 
 Your mission is to help software engineers build a **Mental Model** of a repository by reverse-engineering its architecture (components and relations), conceptual model (core abstractions), core design patterns, structural blueprints, runtime behaviors, and logical invariants.
 
+## 调用方式
+
+```
+/architect-mindset [path]
+```
+
+分析 `[path]` 路径下的仓库，省略则分析当前目录。所有产出写入 `<repo-root>/architect-mindset/`。
+
+## Invocation
+
+```
+/architect-mindset [path]
+```
+
+Analyzes the repository at `[path]` (defaults to the current directory). All output is written to `<repo-root>/architect-mindset/`.
+
 ## Goal
 
 Analyze the codebase to extract its core architecture and concept models, identify foundational design patterns, surface explicit/hidden invariants, and generate intuitive architectural diagrams and visual concept graphs. Help the user transition from a chaotic codebase to an orderly, high-level visual mental sketch.
@@ -116,16 +132,32 @@ Identify the "iron laws" governing these concepts — the properties that must a
 
 ---
 
-## Output Expected
-Provide a clear, scannable, and highly structured report containing exactly these 7 sections:
+## Output
 
-1. **The Architecture Diagram (High-Level Overview):**
-   * Generate a comprehensive **ASCII Diagram** representing the overall bird's-eye view of the project.
-   * The diagram must express **Components** (boxes with names and responsibilities) and **Relations** (labeled arrows showing dependency, data flow, control flow, or protocol) — derived from the 6 identification methods above.
+All output is written to `architect-mindset/` at the repository root. Text reports are Markdown files; diagrams are standalone files in their own format.
+
+```
+architect-mindset/
+  01-arch-diagram.md                 ← Architecture diagram (ASCII)
+  02-concept-model.md                ← Conceptual model diagram (ASCII)
+  03-structural-blueprint.html       ← Structural blueprint (HTML interactive)
+  04-concept-vocabulary.md           ← Concept vocabulary & mapping
+  05-design-patterns.md              ← Design patterns decoded
+  06-dynamic-interaction.md          ← Dynamic interaction (ASCII sequence diagram)
+  06-dynamic-interaction.excalidraw  ← Replaces the above for complex async flows
+  07-invariants.md                   ← Invariant guardrails
+```
+
+Produce exactly these 7 artifacts:
+
+1. **`01-arch-diagram.md` — Architecture Diagram (High-Level Overview):**
+   * Write a comprehensive **ASCII Diagram** as the bird's-eye view of the project.
+   * The diagram must express **Components** (boxes with name + one-line responsibility) and **Relations** (labeled arrows: dependency / data flow / control flow / protocol) — derived from the 6 identification methods above.
    * Group components by execution boundary (e.g., User/Kernel, Client/Server, App/Framework/HAL/Driver) as the outermost layers.
+   * Append a **Component table** (Component | Identified by | Responsibility) and a **Relation table** (From | To | Type | Label).
 
-2. **The Conceptual Model Diagram (The Mind Map):**
-   * Generate a **Visual ASCII Diagram** dedicated purely to domain concepts. Each concept node must show:
+2. **`02-concept-model.md` — Conceptual Model Diagram:**
+   * Write an **ASCII concept-node diagram** dedicated purely to domain concepts. Each concept node must show:
      - Its **abstraction type**: `[M]` Modularity or `[Mo]` Modeling
      - **What it abstracts** (what irrelevant detail it eliminates)
      - **What it amplifies** (the essential property it preserves)
@@ -150,21 +182,34 @@ Provide a clear, scannable, and highly structured report containing exactly thes
    * Connect nodes with labeled relation arrows (`has-a`, `uses`, `extends`, `produces`, `consumes`) to show concept composition.
    * This diagram is the direct map of the system's "Mental Model" — it answers: *what are the first-class ideas in this codebase, and what kind of abstraction is each one?*
 
-3. **The Structural Blueprint Diagram (Static Block View):**
-   * Invoke the `architecture-diagram` skill to produce a **self-contained HTML interactive diagram** that maps how the architectural blocks (IPC, Concurrency, Memory, Storage, etc.) relate to physical directories, filenames, or target modules.
-   * The HTML diagram must use a dark theme, render components as labeled boxes grouped by layer, and draw labeled arrows for each relation type (dependency / data flow / control flow / protocol).
+3. **`03-structural-blueprint.html` — Structural Blueprint (Static Block View):**
+   * Invoke the `architecture-diagram` skill to produce a **self-contained HTML interactive diagram** saved as `03-structural-blueprint.html`.
+   * Maps architectural blocks (IPC, Concurrency, Memory, Storage, etc.) to physical directories, filenames, or build targets.
+   * Dark theme; components as labeled boxes grouped by layer; each relation type as a distinctly labeled arrow (dependency / data flow / control flow / protocol).
 
-4. **The Concept Vocabulary & Mapping:**
-   * Provide a glossary of the 5-10 most critical concepts discovered.
-   * Format: **[Concept Name] -> Found in: [Filenames / Class Names / Struct Names] -> Abstract Meaning & Responsibility.**
+4. **`04-concept-vocabulary.md` — Concept Vocabulary & Mapping:**
+   * Write a glossary of the 5-10 most critical concepts. One entry per concept:
+     ```
+     ## ConceptName
+     - Abstraction type: [M] Modularity / [Mo] Modeling
+     - Found in: `path/to/file.h:StructName`, `ClassName`
+     - Eliminates: [what irrelevant detail is hidden]
+     - Amplifies: [what essential property is preserved]
+     - Responsibility: one sentence
+     - Related: [[ConceptA]] (has-a), [[ConceptB]] (uses)
+     ```
 
-5. **Core Design Patterns Decoded:**
-   * Identify the top 2-4 primary design patterns used in the codebase.
-   * For each pattern, specify: **[Pattern Name] -> Concrete Implementation (Specific Classes/Files) -> Purpose in this Architecture.**
+5. **`05-design-patterns.md` — Design Patterns Decoded:**
+   * Write 2-4 primary design patterns. One entry per pattern:
+     ```
+     ## PatternName
+     - Concrete implementation: `path/to/file.cpp` / `ClassName`
+     - Purpose in this architecture: [what it decouples or manages]
+     - Why chosen: [reason]
+     ```
 
-6. **The Dynamic Interaction Diagram (Behavioral View):**
-   * Generate an **ASCII Sequence Diagram** tracing a critical runtime path. Use the format below. Annotate *where* core data structures are mutated, *which* design patterns are in action, and *when* invariants are enforced.
-
+6. **`06-dynamic-interaction.md` — Dynamic Interaction Diagram:**
+   * Write an **ASCII Sequence Diagram** tracing a critical runtime path. Annotate *where* core data structures are mutated, *which* design pattern is active, and *when* invariants are enforced:
    ```
    Caller          ComponentA         ComponentB         Store
      |                 |                  |                |
@@ -175,8 +220,14 @@ Provide a clear, scannable, and highly structured report containing exactly thes
      |                 | <-- result ----- |                |
      | <-- response -- |                  |                |
    ```
+   * For complex async flows (queues, callbacks, multi-thread), invoke the `excalidraw-diagram` skill instead and write `06-dynamic-interaction.excalidraw` with parallel swimlanes and async boundary markers.
 
-   * For complex async flows (queues, callbacks, threads), use `excalidraw-diagram` skill instead to produce an Excalidraw file that can represent parallel lanes and async boundaries clearly.
-
-7. **The Invariant Guardrails:**
-   * A section listing the top 3-5 critical Invariants (Structural, State, or Contextual), referencing specific functions, validations, or guards in the code.
+7. **`07-invariants.md` — Invariant Guardrails:**
+   * Write 3-5 critical invariants. One entry per invariant:
+     ```
+     ## InvariantName
+     - Type: Structural / State / Lifecycle
+     - Rule: [the property that must always hold]
+     - Evidence: `path/to/file.c:function_name`
+     - Consequence of violation: [what breaks]
+     ```
