@@ -50,10 +50,30 @@ Once components are identified, extract relations by looking for:
 Finally, identify macro-level execution boundaries — User/Kernel, Client/Server, App/Framework/HAL/Driver — and use them as the diagram's outermost grouping layers.
 
 ### 2. Conceptual Model Extraction (The Soul of the Design)
-Do not treat code as just logic; treat names as abstract ideas. Actively scan **Filenames, Class names, Struct definitions, and Core Data Structures** to reverse-engineer the domain's conceptual model:
-* **The Ubiquitous Language:** Identify the repeating noun phrases that form the baseline vocabulary of the project.
-* **Structural Mapping:** Map how these extracted concepts correspond directly to physical files, directories, target names, or classes.
-* **Concept Relations:** Determine how these concepts compose or inherit from each other to form the domain's architecture.
+
+Do not treat code as just logic; treat names as abstract ideas. Actively scan **Filenames, Class names, Struct definitions, and Core Data Structures** to reverse-engineer the domain's conceptual model.
+
+#### What is Abstraction?
+
+**Abstraction = Refinement**: a high-level abstract model that allows multiple implementations. The art is to *see* the high-level abstract model that **eliminates the irrelevant** and **amplifies the essential**. For each concept, ask: what is the appropriate level, and what is the nature of that abstract component?
+
+There are two kinds of abstractions to classify each concept into:
+
+**Modularity Abstraction `[M]`**
+: All about encapsulation, drawing boundaries, and hiding internals — ADT, API, layered design. The abstraction relies on an *interface* to shield internal implementation from callers. Callers see only the contract; the mechanism behind it is irrelevant.
+: *Signal*: the concept has a public interface / header / API surface that callers depend on, while the implementation can vary.
+
+**Modeling Abstraction `[Mo]`**
+: Used when constructing a mental model through thinking and reasoning. The goal is the **minimal, most elegant description** that preserves the one property you care about — cutting away everything orthogonal to that essence.
+: *Signal*: the concept is a conceptual entity (a domain noun, a state machine, a protocol step) with no physical boundary; its value is precision of thought, not encapsulation of code.
+
+#### Analysis Steps
+
+1. **Ubiquitous Language** — Identify the repeating noun phrases that form the baseline vocabulary of the project.
+2. **Structural Mapping** — Map each concept to its physical representation: files, directories, class names, struct names.
+3. **Abstraction Classification** — For each concept, decide: is it a `[M]` Modularity Abstraction (it hides an implementation behind an interface) or a `[Mo]` Modeling Abstraction (it captures an essential domain property with minimal description)?
+4. **Essence Statement** — State in one phrase: *what irrelevant detail does this abstraction eliminate?* and *what essential property does it amplify?*
+5. **Concept Relations** — Determine how concepts compose, inherit, or depend on each other to form the domain's architecture.
 
 ### 3. Core Design Patterns Identification (The Idiomatic Shapes)
 Recognize the classic design patterns and structural idioms embedded in the codebase to activate the user's long-term memory:
@@ -73,7 +93,7 @@ Identify the "iron laws" governing these concepts — the properties that must a
 ---
 
 ## Core Cognitive Tools to Apply
-* **Abstract Thinking (Refinement):** Translate concrete files, structs, and classes into Modularity Abstractions and Modeling Abstractions.
+* **Abstract Thinking (Refinement):** For every concept, ask: what level is appropriate, and what is its nature? Then classify as `[M]` Modularity (interface hides implementation) or `[Mo]` Modeling (minimal description preserves one essential property). State what is eliminated and what is amplified.
 * **Spatial Reasoning:** Convert abstract relationships into concrete visual layers, boundaries, and blocks.
 * **Pattern Matching:** Link code idioms to established software engineering design patterns.
 * **Invariant Inference:** Deduce what the data structures are protecting via validation logic and lock assertions.
@@ -89,8 +109,30 @@ Provide a clear, scannable, and highly structured report containing exactly thes
    * Group components by execution boundary (e.g., User/Kernel, Client/Server, App/Framework/HAL/Driver) as the outermost layers.
 
 2. **The Conceptual Model Diagram (The Mind Map):**
-   * Generate some **Visual ASCII Diagram** dedicated purely to the domain concepts.
-   * Show The concept what abstract. This serves as the direct map of the system's "Mental Model."
+   * Generate a **Visual ASCII Diagram** dedicated purely to domain concepts. Each concept node must show:
+     - Its **abstraction type**: `[M]` Modularity or `[Mo]` Modeling
+     - **What it abstracts** (what irrelevant detail it eliminates)
+     - **What it amplifies** (the essential property it preserves)
+   * Use the following node format:
+
+   ```
+   ┌─────────────────────────────────────────────────────┐
+   │ [M] Scheduler                                       │
+   │ Abstracts: thread lifecycle & priority queuing      │
+   │ Amplifies: "work item gets CPU time in order"       │
+   │ Interface: schedule(Task) / cancel(TaskId)          │
+   └─────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────┐
+   │ [Mo] Task                                           │
+   │ Abstracts: all execution details                    │
+   │ Amplifies: "has identity + priority + runnable body"│
+   │ Found in: struct task_struct / class Task           │
+   └─────────────────────────────────────────────────────┘
+   ```
+
+   * Connect nodes with labeled relation arrows (`has-a`, `uses`, `extends`, `produces`, `consumes`) to show concept composition.
+   * This diagram is the direct map of the system's "Mental Model" — it answers: *what are the first-class ideas in this codebase, and what kind of abstraction is each one?*
 
 3. **The Structural Blueprint Diagram (Static Block View):**
    * Invoke the `architecture-diagram` skill to produce a **self-contained HTML interactive diagram** that maps how the architectural blocks (IPC, Concurrency, Memory, Storage, etc.) relate to physical directories, filenames, or target modules.
