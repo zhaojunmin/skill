@@ -167,29 +167,48 @@ Take the Top-20 by impact score as milestone candidates. Classify each by commit
 
 Written to `git-knowledge-miner/arch/`:
 
-**`01-component-map.md`** — Current component map (spatial reference frame)
+**`01-component-map.html`** — Current component map (interactive HTML diagram)
+
+Invoke the `architecture-diagram` skill to produce a self-contained HTML+SVG file. Specify:
+- **Layout**: layered top-to-bottom (e.g., App → Framework Services → Core Libraries → Platform)
+- **Each component box**: name + path shorthand + file count label; box width proportional to file count
+- **Relations**: module-level dependency arrows inferred from build-file `deps`/`uses` declarations or cross-directory `#include`/`import` counts; label each arrow with dependency type
+- **Color coding**: one color per architectural layer; dark theme
+- **Tooltip on hover**: full path, file count, build descriptor filename
+
+**`01-component-map.md`** — Component map data tables (text supplement)
 
 ```markdown
 # Component Map (Analysis Baseline)
 
 ## Component List
 
-| Component | Path | File Count | Identified By |
-|-----------|------|-----------|---------------|
-| ActivityManager | frameworks/base/services/core/java/.../am/ | 87 | Directory boundary + Android.bp |
+| Component | Path | File Count | Layer | Identified By |
+|-----------|------|-----------|-------|---------------|
+| ActivityManager | .../am/ | 87 | Framework Services | Directory boundary + Android.bp |
 | ...
 
-## Component Hierarchy (ASCII)
+## Component Dependency Summary
 
-[Layer: Framework Services]
-  ├── ActivityManager (am/)
-  ├── WindowManager (wm/)
-  └── PackageManager (pm/)
-[Layer: Core Libraries]
-  └── ...
+| From | To | Dependency Type | Evidence |
+|------|----|----------------|---------|
 ```
 
-**`02-evolution-timeline.md`** — Architectural evolution timeline
+**`02-evolution-timeline.excalidraw`** — Architectural evolution timeline (visual)
+
+Invoke the `excalidraw-diagram` skill to produce a horizontal timeline diagram. Specify:
+- **Spine**: a horizontal time axis from the repo's first commit date to latest, labeled with year markers
+- **Phase bands**: colored semi-transparent rectangles spanning each evolution phase, labeled with phase name and date range
+- **Milestone nodes**: diamond shapes on the timeline spine, positioned at their commit date, color-coded by type:
+  - 🔴 SPLIT (red) — responsibility decomposed
+  - 🟠 REFACTOR (orange) — reorganization
+  - 🟢 NEW_SUBSYSTEM (green) — new domain established
+  - 🔵 MERGE (blue) — consolidation
+  - ⚫ DEPRECATION (gray) — removal
+- **Each milestone annotation**: brief label (commit message excerpt + file count), connected to the spine by a short vertical stem
+- **Responsibility-shift arrows**: curved arrows between component labels above/below the spine, showing FROM → TO with file count
+
+**`02-evolution-timeline.md`** — Architectural evolution timeline (text supplement)
 
 ```markdown
 # Architectural Evolution Timeline
@@ -209,7 +228,7 @@ Written to `git-knowledge-miner/arch/`:
 
 ### Phase 2: ...
 
-## Evolution Heatmap (by Component)
+## Component Change Heatmap
 
 | Component | Change Count | Responsibility In | Responsibility Out | Net |
 |-----------|-------------|------------------|--------------------|-----|
@@ -352,6 +371,19 @@ module-level knowledge → aggregate to project level:
 ### Output Files
 
 Written to `git-knowledge-miner/knowledge/`:
+
+**`00-knowledge-heatmap.html`** — Knowledge density heatmap (interactive HTML)
+
+Invoke the `architecture-diagram` skill to produce a self-contained HTML+SVG heatmap. Specify:
+- **Layout**: grid — rows = top-N modules (or classes if module count is small), columns = 5 categories (PERF / RELI / SECU / DESIGN / INVAR)
+- **Each cell**: filled rectangle; color intensity (white → saturated) encodes entry count for that module × category pair; 0 entries = dark empty cell
+- **Color scheme per column**: PERF = amber, RELI = red, SECU = purple, DESIGN = cyan, INVAR = green; all on dark background
+- **Cell label**: entry count; 0 entries show as "—"
+- **Row labels** (left): module/class name + total count
+- **Column labels** (top): category name + total count
+- **Totals row** (bottom): sum per category; **totals column** (right): sum per module
+- **Tooltip on hover**: list up to 3 entry IDs for that cell with one-line summary each
+- **Title**: "Knowledge Density Map — `<repo-name>`"
 
 **`00-project-level.md`** — Project-level knowledge map (top-level agent entry point)
 
@@ -570,7 +602,22 @@ git log --after="<date-2weeks>" --before="<date+2weeks>" \
 
 Written to `git-knowledge-miner/class-history/`:
 
-**`<ClassName>-timeline.md`** — Key node timeline
+**`<ClassName>-timeline.excalidraw`** — LOC evolution + key node timeline (visual)
+
+Invoke the `excalidraw-diagram` skill to produce an annotated timeline. Specify:
+- **Top band**: LOC evolution line chart — X axis = time (from birth to present), Y axis = lines of code. Plot each LOC snapshot as a point and connect with a smooth curve. Shade the area under the curve in a translucent fill.
+- **Key node markers**: vertical tick marks on the LOC curve at each key node's date. Each tick has a colored dot (type color below) and a short annotation label rotated 45° upward:
+  - 🟢 BIRTH (green) — "Born · N LOC"
+  - 🔵 PERF (blue) — brief summary
+  - 🔴 RELI (red) — brief summary
+  - 🟠 SPLIT (orange) — "Split: -N LOC → [extracted class names]"
+  - 🟣 DESIGN (purple) — brief summary
+  - ⚫ DORMANT_BREAK (gray) — "Inactive Ngap mo"
+- **Bottom band**: project activity bar chart — same X axis, Y axis = number of project-wide commits in a 2-week sliding window. Shows when the class changed during high-activity vs. quiet periods.
+- **Rename markers**: small labeled flags on the X axis showing when the file was renamed, with old-name → new-name label.
+- **Phase regions**: optional light background shading for named evolution phases if identified.
+
+**`<ClassName>-timeline.md`** — Key node timeline (text, primary reference)
 
 ```markdown
 # <ClassName> History Key Node Timeline
@@ -611,23 +658,24 @@ Written to `git-knowledge-miner/class-history/`:
 ---
 
 (repeat for each key node through to the most recent)
-
-## LOC Evolution Curve (ASCII)
-
-LOC
-8000 |          ****
-6000 |       ***    *
-4000 |    ***        ****
-2000 |****                ****
-     +------------------------→ time
-      2014  2016  2018  2020  2022
-
-Annotations:
-  ↑ 2015-03: [GROWTH]  Multi-user support added (+1800 LOC)
-  ↓ 2019-09: [SPLIT]   TaskRecord extracted (-2500 LOC)
 ```
 
-**`<ClassName>-collaborators.md`** — Collaborator evolution
+**`<ClassName>-collaborators.excalidraw`** — Collaborator evolution swimlane diagram (visual)
+
+Invoke the `excalidraw-diagram` skill to produce a swimlane / presence chart. Specify:
+- **Layout**: horizontal swimlanes — one row per collaborator (top rows = highest co-change count), X axis = time
+- **Presence bars**: for each collaborator, a filled horizontal bar spanning the period they were actively co-changing with the target class (first co-change date → last co-change date); bar opacity encodes co-change frequency (more frequent = more opaque)
+- **Color per relationship type**:
+  - Dark teal = Persistent (present throughout)
+  - Green = Emerging (appeared recently)
+  - Red-orange = Vanished (no longer present)
+  - Gray = Phase-only (active only in one period)
+- **Event markers**: small vertical tick on the bar when a milestone key node occurred that involved this collaborator (first appearance, last appearance, spike in co-changes)
+- **Target class row**: highlighted row at the top or bottom showing the target class's own LOC scaled to the same X axis
+- **Phase dividers**: vertical dashed lines at phase boundaries with phase name labels
+- **Legend**: relationship type color key, plus note "bar height = rank by co-change frequency"
+
+**`<ClassName>-collaborators.md`** — Collaborator evolution (text supplement)
 
 ```markdown
 # <ClassName> Collaborator Evolution
@@ -654,15 +702,6 @@ Emerging:
 
 Vanished:
 - `ActivityStack` (last seen <date>): [migrated to wm/ subsystem]
-
-## Collaborator Evolution Diagram (ASCII)
-
-2014 → 2016    ActivityRecord, ActivityStack, ProcessRecord
-2016 → 2018  + LockTaskController, VoiceInteractionSession
-2018 → 2020  + ActivityTaskManager
-             - ActivityStack (→ wm/ subsystem)
-2020 → now   + ActivityClientController
-             - LockTaskController (spun off independently)
 ```
 
 **`<ClassName>-knowledge.md`** — Type-indexed knowledge nodes (on-demand retrieval)
@@ -754,14 +793,18 @@ Run Phase 0–3 independently for each class, then produce an additional artifac
 - Every architectural interpretation / lesson must answer: what is the action implication for a future maintainer?
 
 ### arch mode
+- `01-component-map.html`: must render at least 5 components with visible layer grouping and at least 3 dependency arrows
+- `02-evolution-timeline.excalidraw`: must show all identified milestones as typed nodes on the spine; phase bands must be labeled with date ranges
 - `02-evolution-timeline.md`: identify at least 3 distinct evolution phases
 - `04-milestones.md`: list at least 5 milestones, each with a complete architectural interpretation
 
 ### knowledge mode
+- `00-knowledge-heatmap.html`: all 5 category columns must be present; any module with ≥3 total entries must appear as a row; cell tooltips must list at least 1 entry ID
 - `02-class-index.md`: every class with ≥2 entries must have a record
 - Each entry's `Lesson` field must be a transferable principle, not just "fixed a bug"
 
 ### class-history mode
+- `<ClassName>-timeline.excalidraw`: LOC curve must span the full history with at least all identified key nodes marked; the bottom project-activity bar chart must be present
+- `<ClassName>-collaborators.excalidraw`: must show at least top-10 collaborators as swimlanes; persistent vs. phase vs. vanished must be visually distinguishable; at least 2 phase dividers if phases were identified
 - `<ClassName>-timeline.md`: every key node must include size information, collaborator changes, and project-wide context
 - Node count: a class with 200+ commits should typically yield 8–15 key nodes
-- The collaborator evolution diagram must show at least 2 distinct phase transitions
